@@ -282,3 +282,29 @@ func (v *VM) checkSP(t *testing.T, index, expectedSp int) {
 	}
 
 }
+
+func TestTernary1(t *testing.T) {
+	input := `
+		1 == 5 ? 10 : 20
+	`
+	expected := `20`
+
+	vm := initTestVM()
+	evaluated := vm.testEval(t, input, getFilename())
+	VerifyExpected(t, i, evaluated, expected)
+	vm.checkCFP(t, i, 0)
+	vm.checkSP(t, i, 1)
+}
+
+func TestTernary2(t *testing.T) {
+	input := `
+		5 == 5 ? 10 : 20
+	`
+	expected := `10`
+
+	vm := initTestVM()
+	evaluated := vm.testEval(t, input, getFilename())
+	VerifyExpected(t, i, evaluated, expected)
+	vm.checkCFP(t, i, 0)
+	vm.checkSP(t, i, 1)
+}

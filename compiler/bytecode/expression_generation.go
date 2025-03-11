@@ -2,6 +2,7 @@ package bytecode
 
 import (
 	"fmt"
+
 	"github.com/goby-lang/goby/compiler/ast"
 )
 
@@ -12,6 +13,8 @@ func (g *Generator) compileExpression(is *InstructionSet, exp ast.Expression, sc
 
 	sourceLine := exp.Line()
 	switch exp := exp.(type) {
+	case *ast.TernaryExpression:
+		g.compileTernaryExpression(is, exp, scope, table)
 	case *ast.Constant:
 		is.define(GetConstant, sourceLine, exp.Value, exp.IsNamespace)
 	case *ast.InstanceVariable:
@@ -48,7 +51,14 @@ func (g *Generator) compileExpression(is *InstructionSet, exp ast.Expression, sc
 	case *ast.PrefixExpression:
 		g.compilePrefixExpression(is, exp, scope, table)
 	case *ast.InfixExpression:
-		g.compileInfixExpression(is, exp, scope, table)
+		if exp.Operator == "||" {
+			g.compileExpression(is, exp.Left, scope, table)
+			jumpTruePos := is.define(BranchUnless, sourceLine, 0)
+			g.compileExpression(is, exp.Right, scope, table)
+			is.updateJumpAddress(jumpTruePos.line, len(is.Instructions))
+		} else {
+			g.compileInfixExpression(is, exp, scope, table)
+		}
 	case *ast.Identifier:
 		g.compileIdentifier(is, exp, scope, table)
 	case *ast.AssignExpression:
@@ -107,12 +117,14 @@ func (g *Generator) compileCallExpression(is *InstructionSet, exp *ast.CallExpre
 			varName := arg.Variables[0].(*ast.Identifier)
 			argSet.setArg(i, varName.Value, OptionedArg)
 		case *ast.ArgumentPairExpression:
-			key := arg.Key.(*ast.Identifier)
-
-			if arg.Value == nil {
-				argSet.setArg(i, key.Value, RequiredKeywordArg)
+			if key, ok := arg.Key.(*ast.Identifier); ok {
+				if arg.Value == nil {
+					argSet.setArg(i, key.Value, RequiredKeywordArg)
+				} else {
+					argSet.setArg(i, key.Value, OptionalKeywordArg)
+				}
 			} else {
-				argSet.setArg(i, key.Value, OptionalKeywordArg)
+				argSet.setArg(i, fmt.Sprintf("%d", i), NormalArg)
 			}
 		case *ast.PrefixExpression:
 			if arg.Operator == "*" {
@@ -281,5 +293,35 @@ func (g *Generator) compileInfixExpression(is *InstructionSet, node *ast.InfixEx
 		g.compileExpression(is, node.Left, scope, table)
 		g.compileExpression(is, node.Right, scope, table)
 		is.define(Send, node.Line(), node.Operator, 1, "", &ArgSet{})
+	}
+}
+
+func (g *Generator) compileTernaryExpression(is *InstructionSet, exp *ast.TernaryExpression, scope *scope, table *localTable) {
+	sourceLine := exp.Line()
+	g.compileExpression(is, exp.Condition, scope, table)
+	jumpFalsePos := is.define(BranchUnless, sourceLine, 0)
+	g.compileExpression(is, exp.Consequence, scope, table)
+	jumpEndPos := is.define(Jump, sourceLine, 0)
+	is.updateJumpAddress(jumpFalsePos.line, len(is.Instructions))
+	g.compileExpression(is, exp.Alternative, scope, table)
+	is.updateJumpAddress(jumpEndPos.line, len(is.Instructions))
+}
+
+func (is *InstructionSet) updateJumpAddress(index int, newAddress int) {
+	if index < 0 || index >= len(is.Instructions) {
+		return
+	}
+
+	inst := is.Instructions[index]
+
+	switch inst.Opcode {
+	case BranchUnless, Jump:
+		if len(inst.Params) > 0 {
+			inst.Params[0] = newAddress
+		} else {
+			return
+		}
+	default:
+		return
 	}
 }

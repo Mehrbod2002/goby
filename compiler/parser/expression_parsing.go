@@ -17,6 +17,34 @@ type (
 	infixParseFn  func(ast.Expression) ast.Expression
 )
 
+func (p *Parser) parseTernaryExpression(v ast.Expression) ast.Expression {
+	exp := &ast.TernaryExpression{
+		BaseNode:  &ast.BaseNode{},
+		Condition: v,
+	}
+
+	oldState := p.fsm.Current()
+	p.fsm.Event(events.ParseTernary)
+
+	p.nextToken()
+
+	exp.Consequence = p.parseExpression(precedence.Ternary)
+
+	if !p.expectPeek(token.Colon) {
+		errMsg := fmt.Sprintf("Expected ':' token in ternary expression. Line: %d", p.curToken.Line)
+		p.error = errors.InitError(errMsg, errors.SyntaxError)
+		return nil
+	}
+
+	p.nextToken()
+
+	exp.Alternative = p.parseExpression(precedence.Ternary)
+
+	p.fsm.Event(events.EventTable[oldState])
+
+	return exp
+}
+
 func (p *Parser) parseAssignExpression(v ast.Expression) ast.Expression {
 	var value ast.Expression
 	var tok token.Token

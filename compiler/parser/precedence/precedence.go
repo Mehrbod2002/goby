@@ -9,6 +9,7 @@ const (
 	Normal
 	Assign
 	Logic
+	Ternary
 	Range
 	Equals
 	Compare
@@ -31,6 +32,7 @@ var LookupTable = map[token.Type]int{
 	token.COMP:               Compare,
 	token.And:                Logic,
 	token.Or:                 Logic,
+	token.TernaryOperator:    Ternary,
 	token.Range:              Range,
 	token.Plus:               Sum,
 	token.Minus:              Sum,

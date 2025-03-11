@@ -6,4 +6,5 @@ const (
 	ParsingFuncCall    = "parsingFuncCall"
 	ParsingMethodParam = "parsingMethodParam"
 	ParsingAssignment  = "parsingAssignment"
+	ParsingTernary     = "parsingTernary"
 )

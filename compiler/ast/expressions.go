@@ -472,3 +472,33 @@ func (re *RangeExpression) String() string {
 
 	return out.String()
 }
+
+type TernaryExpression struct {
+	*BaseNode
+	Condition   Expression
+	Consequence Expression
+	Alternative Expression
+}
+
+type BinaryExpression struct {
+	Left     Expression
+	Operator string
+	Right    Expression
+	Line     int
+}
+
+func (te *TernaryExpression) expressionNode() {}
+func (te *TernaryExpression) TokenLiteral() string {
+	return te.Token.Literal
+}
+func (te *TernaryExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(te.Condition.String())
+	out.WriteString(" ? ")
+	out.WriteString(te.Consequence.String())
+	out.WriteString(" : ")
+	out.WriteString(te.Alternative.String())
+
+	return out.String()
+}

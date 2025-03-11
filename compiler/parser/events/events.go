@@ -10,6 +10,7 @@ const (
 	ParseFuncCall    = "parseFuncCall"
 	ParseMethodParam = "parseMethodParam"
 	ParseAssignment  = "parseAssignment"
+	ParseTernary     = "parseTernary"
 )
 
 // EventTable is the mapping of state and its corresponding event
@@ -18,4 +19,5 @@ var EventTable = map[string]string{
 	states.ParsingFuncCall:    ParseFuncCall,
 	states.ParsingMethodParam: ParseMethodParam,
 	states.ParsingAssignment:  ParseAssignment,
+	states.ParsingTernary:     ParseTernary,
 }

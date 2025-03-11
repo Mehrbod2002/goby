@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"testing"
+
 	"github.com/goby-lang/goby/compiler/ast"
 	"github.com/goby-lang/goby/compiler/lexer"
-	"testing"
 )
 
 func TestMethodChainExpression(t *testing.T) {
@@ -39,6 +40,41 @@ func TestMethodChainExpression(t *testing.T) {
 
 	originalReceiver := thirdCall.TestableReceiver().IsConstant(t)
 	originalReceiver.ShouldHaveName("Person")
+}
+
+func TestUnaryOperatorPrecedenceParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"3 == false ? 1 :      33",
+			"(3 == false) ? 1 : 33",
+		},
+		{
+			"5 ==     5 ? 1 :      33",
+			"(5 == 5) ? 1 : 33",
+		},
+		{
+			"5                         ==     5 ? 1 :      33",
+			"(5 == 5) ? 1 : 33",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program, err := p.ParseProgram()
+
+		if err != nil {
+			t.Fatal(err.Message)
+		}
+
+		actual := program.String()
+		if actual != tt.expected {
+			t.Errorf("expcted=%q, got=%q", tt.expected, actual)
+		}
+	}
 }
 
 func TestOperatorPrecedenceParsing(t *testing.T) {

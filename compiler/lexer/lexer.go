@@ -159,6 +159,8 @@ func (l *Lexer) NextToken() token.Token {
 		}
 	case '%':
 		tok = token.CreateOperator("%", l.line)
+	case '?':
+		tok = token.CreateOperator(string(l.ch), l.line)
 	case '#':
 		tok.Literal = string(l.absorbComment())
 		tok.Type = token.Comment

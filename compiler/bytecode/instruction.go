@@ -139,6 +139,10 @@ type InstructionSet struct {
 	argTypes     *ArgSet
 }
 
+func (is *InstructionSet) Len() int {
+	panic("unimplemented")
+}
+
 // ArgSet stores the metadata of a method definition's parameters.
 type ArgSet struct {
 	names []string

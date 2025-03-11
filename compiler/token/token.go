@@ -82,6 +82,7 @@ const (
 	Module   = "MODULE"
 
 	ResolutionOperator = "::"
+	TernaryOperator    = "?"
 )
 
 var keywords = map[string]Type{
@@ -134,6 +135,7 @@ var operators = map[string]Type{
 	"..": Range,
 
 	"::": ResolutionOperator,
+	"?":  TernaryOperator,
 }
 
 var separators = map[string]Type{
